@@ -15,6 +15,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+        android:name=".activities.MovieDetailsActivity"
+        android:label="@string/activity_detail_item"
+        android:theme="@style/AppTheme"/>
+        <activity
+            android:name=".activities.PlayTrailerActivity"
+            android:label="@string/activity_play_video"
+            android:screenOrientation="landscape"/>
     </application>
 
 </manifest>

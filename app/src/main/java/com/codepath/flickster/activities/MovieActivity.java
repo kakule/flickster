@@ -1,8 +1,13 @@
 package com.codepath.flickster.activities;
 
+import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -24,26 +29,45 @@ public class MovieActivity extends AppCompatActivity {
     ArrayList<Movie> movies;
     MovieArrayAdapter movieAdapter;
     ListView lvItems;
+    String url;
+    AsyncHttpClient client;
+    SwipeRefreshLayout swipeContainer;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie);
-        String url = "https://api.themoviedb.org/3/movie/now_playing?api_key=a07e22bc18f5cb106bfe4cc1f83ad8ed";
-        AsyncHttpClient client = new AsyncHttpClient();
+        url = "https://api.themoviedb.org/3/movie/now_playing?api_key=a07e22bc18f5cb106bfe4cc1f83ad8ed";
+        client = new AsyncHttpClient();
         lvItems = (ListView)findViewById(R.id.lvMovies);
+        swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
         movies = new ArrayList<>();
         movieAdapter = new MovieArrayAdapter(this, movies);
         lvItems.setAdapter(movieAdapter);
+        loadMovies();
+        swipeContainer.setOnRefreshListener(movieReferesh);
+        setupListViewListener();
+    }
+
+    SwipeRefreshLayout.OnRefreshListener movieReferesh = new SwipeRefreshLayout.OnRefreshListener() {
+        @Override
+        public void onRefresh() {
+            loadMovies();
+        }
+    };
+
+    public void loadMovies() {
         client.get(url, new JsonHttpResponseHandler(){
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                 JSONArray movieJsonResults;
-
+                movies.clear();
                 try {
                     movieJsonResults = response.getJSONArray("results");
                     movies.addAll(Movie.fromJSONArray(movieJsonResults));
                     movieAdapter.notifyDataSetChanged();
                     Log.d("FLICK", movies.toString());
+                    //Signal refreshing has stopped
+                    swipeContainer.setRefreshing(false);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -53,10 +77,38 @@ public class MovieActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                super.onFailure(statusCode, headers, responseString, throwable);
                 Toast.makeText(MovieActivity.this, "failed", Toast.LENGTH_SHORT).show();
                 Log.d("FLICK", "failed");
             }
         });
     }
+
+    private void setupListViewListener() {
+        lvItems.setOnItemClickListener(
+                new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> adapter, View item, int pos, long id) {
+                        Movie movie = movies.get(pos);
+                        Intent i;
+                        if (movie.ispopular()) {
+                            i = new Intent(MovieActivity.this, PlayTrailerActivity.class);
+                            i.putExtra("movieid", movie.getId());
+                            i.putExtra("playmovie", 1);
+                        } else {
+                            i = new Intent(MovieActivity.this, MovieDetailsActivity.class);
+                            //put movie details into extras
+                            i.putExtra("title", movie.getOriginalTitle());
+                            i.putExtra("imageurl", movie.getPosterpath(Configuration.ORIENTATION_LANDSCAPE));
+                            i.putExtra("rating", movie.getCurrentpopularity());
+                            i.putExtra("releasedate", movie.getReleasedate());
+                            i.putExtra("overview", movie.getOverview());
+                            i.putExtra("movieid", movie.getId());
+                        }
+                        //start detail activity
+                        startActivity(i);
+                    }
+                });
+
+    }
+
 }

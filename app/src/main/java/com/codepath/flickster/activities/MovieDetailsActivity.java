@@ -13,6 +13,7 @@ import com.squareup.picasso.Picasso;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import jp.wasabeef.picasso.transformations.RoundedCornersTransformation;
 
 /**
  * Created on 10/15/2016.
@@ -41,6 +42,7 @@ public class MovieDetailsActivity extends AppCompatActivity{
         tvReleaseDate.setText("Release date: " + releasedate);
         brDetail.setRating(rating);
         Picasso.with(this).load(imgurl)
+                .transform(new RoundedCornersTransformation(10, 10))
                 .placeholder(R.drawable.flicker_placeholder_r)
                 .error(R.drawable.flicker_not_found_r2)
                 .into(ivImage);

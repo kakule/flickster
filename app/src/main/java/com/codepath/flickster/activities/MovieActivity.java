@@ -23,23 +23,27 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import cz.msebera.android.httpclient.Header;
 
 public class MovieActivity extends AppCompatActivity {
     ArrayList<Movie> movies;
     MovieArrayAdapter movieAdapter;
-    ListView lvItems;
+    // Automatically finds each field by the specified ID.
+    @BindView(R.id.lvMovies) ListView lvItems;
+    @BindView(R.id.swipeContainer) SwipeRefreshLayout swipeContainer;
     String url;
     AsyncHttpClient client;
-    SwipeRefreshLayout swipeContainer;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie);
+        //Bind the views
+        ButterKnife.bind(this);
         url = "https://api.themoviedb.org/3/movie/now_playing?api_key=a07e22bc18f5cb106bfe4cc1f83ad8ed";
         client = new AsyncHttpClient();
-        lvItems = (ListView)findViewById(R.id.lvMovies);
-        swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
         movies = new ArrayList<>();
         movieAdapter = new MovieArrayAdapter(this, movies);
         lvItems.setAdapter(movieAdapter);
@@ -71,7 +75,7 @@ public class MovieActivity extends AppCompatActivity {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                Toast.makeText(MovieActivity.this, "success", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(MovieActivity.this, "success", Toast.LENGTH_SHORT).show();
                 Log.d("FLICK", "success");
             }
 

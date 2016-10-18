@@ -11,27 +11,31 @@ import android.widget.TextView;
 import com.codepath.flickster.R;
 import com.squareup.picasso.Picasso;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 /**
  * Created on 10/15/2016.
  */
 public class MovieDetailsActivity extends AppCompatActivity{
     String movieid;
+    @BindView(R.id.tvDetailTitle) TextView tvTitle;
+    @BindView(R.id.tvDetailRelease) TextView tvReleaseDate;
+    @BindView(R.id.tvDetailOverview) TextView tvOverview;
+    @BindView(R.id.ivDetail) ImageView ivImage;
+    @BindView(R.id.rbDetail) RatingBar brDetail;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_detail);
+        //Bind the views
+        ButterKnife.bind(this);
         String title = getIntent().getStringExtra("title");
         String imgurl = getIntent().getStringExtra("imageurl");
         float rating = getIntent().getFloatExtra("rating", 0);
         String releasedate = getIntent().getStringExtra("releasedate");
         String overview = getIntent().getStringExtra("overview");
         movieid = getIntent().getStringExtra("movieid");
-        TextView tvTitle = (TextView) findViewById(R.id.tvDetailTitle);
-        TextView tvReleaseDate = (TextView) findViewById(R.id.tvDetailRelease);
-        TextView tvOverview = (TextView) findViewById(R.id.tvDetailOverview);
-        ImageView ivImage = (ImageView) findViewById(R.id.ivDetail);
-        RatingBar brDetail = (RatingBar) findViewById(R.id.rbDetail);
-
         tvTitle.setText(title);
         tvOverview.setText(overview);
         tvReleaseDate.setText("Release date: " + releasedate);

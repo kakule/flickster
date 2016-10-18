@@ -16,15 +16,31 @@ import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 /**
  * Created on 10/14/2016.
  */
 public class MovieArrayAdapter extends ArrayAdapter<Movie>{
-    //View lookup cache
-    private static class ViewHolder {
-        ImageView ivImage;
-        TextView tvTitle;
-        TextView tvOverview;
+    //View lookup cache for unpopular movie
+    static class ViewHolderOne {
+        @BindView(R.id.ivMovieImage) ImageView ivImage;
+        @BindView(R.id.tvTitle) TextView tvTitle;
+        @BindView(R.id.tvOverview) TextView tvOverview;
+
+        public ViewHolderOne(View v) {
+            ButterKnife.bind(this, v);
+        }
+    }
+
+    //View lookup cache for popular movie
+    static class ViewHolderTwo {
+        @BindView(R.id.ivPopularMovieImage) ImageView ivImage;
+
+        public ViewHolderTwo(View v) {
+            ButterKnife.bind(this, v);
+        }
     }
     public MovieArrayAdapter(Context context, List<Movie>movies) {
         super (context, android.R.layout.simple_list_item_1, movies);
@@ -48,42 +64,52 @@ public class MovieArrayAdapter extends ArrayAdapter<Movie>{
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         Movie movie = getItem(position);
-        ViewHolder viewHolder;
+        ViewHolderOne viewholderone;
+        ViewHolderTwo viewholdertwo;
         int orientation = getContext().getResources().getConfiguration().orientation;
         int type = getItemViewType(position);
         if (convertView == null) {
             //Get item type
-            viewHolder = new ViewHolder();
             convertView = getInflatedLayoutForType(type, parent);
             if (type == 0) {
-                viewHolder.ivImage = (ImageView) convertView.findViewById(R.id.ivMovieImage);
-                viewHolder.tvTitle = (TextView) convertView.findViewById(R.id.tvTitle);
-                viewHolder.tvOverview = (TextView) convertView.findViewById(R.id.tvOverview);
+                viewholderone = new ViewHolderOne(convertView);
+                //cache the viewHolder object inside fresh view
+                 convertView.setTag(viewholderone);
             } else {
-                viewHolder.ivImage = (ImageView) convertView.findViewById(R.id.ivPopularMovieImage);
+                viewholdertwo = new ViewHolderTwo(convertView);
+                //cache the viewHolder object inside fresh view
+                 convertView.setTag(viewholdertwo);
             }
-            //cache the viewHolder object inside fresh view
-            convertView.setTag(viewHolder);
-        } else {
-            viewHolder = (ViewHolder) convertView.getTag();
-        }
-        //clear image from convertView
-        viewHolder.ivImage.setImageResource(0);
-        //populate new data into listview
-        if (type == 0) {
-            viewHolder.tvTitle.setText(movie.getOriginalTitle());
-            if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                viewHolder.tvTitle.setTextAppearance(parent.getContext(),
-                        android.R.style.TextAppearance_Medium);
-                viewHolder.tvTitle.setTextColor(Color.parseColor("#1ab9dc"));
-            }
-            viewHolder.tvOverview.setText(movie.getOverview());
+
         }
 
-        Picasso.with(getContext()).load(movie.getPosterpath(orientation))
-                .placeholder(R.drawable.flicker_placeholder_r)
-                .error(R.drawable.flicker_not_found_r2)
-                .into(viewHolder.ivImage);
+        if (type == 0) {
+            viewholderone = (ViewHolderOne) convertView.getTag();
+            //clear image from convertView
+            viewholderone.ivImage.setImageResource(0);
+            //populate new data into listview
+            viewholderone.tvTitle.setText(movie.getOriginalTitle());
+            if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                viewholderone.tvTitle.setTextAppearance(parent.getContext(),
+                        android.R.style.TextAppearance_Medium);
+                viewholderone.tvTitle.setTextColor(Color.parseColor("#1ab9dc"));
+            }
+            viewholderone.tvOverview.setText(movie.getOverview());
+
+            Picasso.with(getContext()).load(movie.getPosterpath(orientation))
+                    .placeholder(R.drawable.flicker_placeholder_r)
+                    .error(R.drawable.flicker_not_found_r2)
+                    .into(viewholderone.ivImage);
+        } else {
+            viewholdertwo = (ViewHolderTwo) convertView.getTag();
+            //clear image from convertView
+            viewholdertwo.ivImage.setImageResource(0);
+
+            Picasso.with(getContext()).load(movie.getPosterpath(orientation))
+                    .placeholder(R.drawable.flicker_placeholder_r)
+                    .error(R.drawable.flicker_not_found_r2)
+                    .into(viewholdertwo.ivImage);
+        }
 
         //return the view
         return convertView;

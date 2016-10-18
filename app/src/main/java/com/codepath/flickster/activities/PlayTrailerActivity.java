@@ -16,6 +16,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import cz.msebera.android.httpclient.Header;
 
 /**
@@ -29,15 +31,15 @@ public class PlayTrailerActivity extends YouTubeBaseActivity{
     String youtubeid;
     int playmovie = 0;
     AsyncHttpClient client;
-    YouTubePlayerView youtubeplayer;
+    @BindView(R.id.vidplayer) YouTubePlayerView youtubeplayer;
 
     @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         setContentView(R.layout.item_video);
+        ButterKnife.bind(this);
         movieid = getIntent().getStringExtra("movieid");
         playmovie = getIntent().getIntExtra("playmovie", 0);
-        youtubeplayer = (YouTubePlayerView) findViewById(R.id.vidplayer);
         client = new AsyncHttpClient();
         getYoutubeVidId();
 

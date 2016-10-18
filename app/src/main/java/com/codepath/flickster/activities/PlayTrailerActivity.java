@@ -9,16 +9,19 @@ import com.google.android.youtube.player.YouTubeBaseActivity;
 import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayerView;
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.JsonHttpResponseHandler;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import cz.msebera.android.httpclient.Header;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 /**
  * Created on 10/16/2016.
@@ -30,7 +33,7 @@ public class PlayTrailerActivity extends YouTubeBaseActivity{
     String movieid;
     String youtubeid;
     int playmovie = 0;
-    AsyncHttpClient client;
+    OkHttpClient client = new OkHttpClient();
     @BindView(R.id.vidplayer) YouTubePlayerView youtubeplayer;
 
     @Override
@@ -40,41 +43,59 @@ public class PlayTrailerActivity extends YouTubeBaseActivity{
         ButterKnife.bind(this);
         movieid = getIntent().getStringExtra("movieid");
         playmovie = getIntent().getIntExtra("playmovie", 0);
-        client = new AsyncHttpClient();
+        client = new OkHttpClient();
         getYoutubeVidId();
 
     }
 
     public void getYoutubeVidId ( ) {
         String video_url = String.format("%s/%s/videos?api_key=%s", url_base, movieid, api_key);
-        client.get(video_url, new JsonHttpResponseHandler() {
+        Request request = new Request.Builder()
+                .url(video_url)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
             @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                try {
-                    JSONArray ans = response.getJSONArray("results");
-                    youtubeid = Movie.trailerfromJSONArray(ans);
-                    Log.d("FLICKER", "The youtube id is " + youtubeid);
+            public void onFailure(Call call, IOException e) {
 
-                    youtubeplayer.initialize(youtube_api_key, new YouTubePlayer.OnInitializedListener() {
-                        @Override
-                        public void onInitializationSuccess(YouTubePlayer.Provider provider, YouTubePlayer youTubePlayer, boolean b) {
-                            Log.d("FLICKER", "The youtube again just before api call is " + youtubeid);
-                            // do any work here to cue video, play video, etc.
-                            if (playmovie == 0) {
-                                youTubePlayer.cueVideo(youtubeid);
-                            } else {
-                                youTubePlayer.loadVideo(youtubeid);
-                            }
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                final String responseData = response.body().string();
+
+                PlayTrailerActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            JSONObject json = new JSONObject(responseData);
+                            youtubeid = Movie.trailerfromJSONArray(json.getJSONArray("results"));
+                            Log.d("FLICKER", "The youtube id is " + youtubeid);
+
+                            youtubeplayer.initialize(youtube_api_key, new YouTubePlayer.OnInitializedListener() {
+                                @Override
+                                public void onInitializationSuccess(YouTubePlayer.Provider provider,
+                                                                    YouTubePlayer youTubePlayer, boolean b) {
+                                    Log.d("FLICKER", "The youtube again just before api call is " + youtubeid);
+                                    // do any work here to cue video, play video, etc.
+                                    if (playmovie == 0) {
+                                        youTubePlayer.cueVideo(youtubeid);
+                                    } else {
+                                        youTubePlayer.loadVideo(youtubeid);
+                                    }
+                                }
+
+                                @Override
+                                public void onInitializationFailure(YouTubePlayer.Provider provider,
+                                                                    YouTubeInitializationResult youTubeInitializationResult) {
+
+                                }
+                            });
+                        } catch (JSONException e) {
+                            e.printStackTrace();
                         }
-
-                        @Override
-                        public void onInitializationFailure(YouTubePlayer.Provider provider, YouTubeInitializationResult youTubeInitializationResult) {
-
-                        }
-                    });
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                    }
+                });
             }
         });
 
